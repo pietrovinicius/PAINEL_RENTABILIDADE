@@ -312,7 +312,8 @@ def main():
     print("main()")
     
     # Define o locale para português do Brasil
-    locale.setlocale(locale.LC_ALL, 'pt_BR.UTF-8')
+    #locale.setlocale(locale.LC_ALL, 'pt_BR.UTF-8')
+    locale.setlocale(locale.LC_ALL, 'en_US.UTF-8')
 
     # Verifica se o arquivo existe
     print('Verifica se o arquivo existe')
