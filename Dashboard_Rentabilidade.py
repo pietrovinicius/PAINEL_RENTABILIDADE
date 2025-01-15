@@ -1,16 +1,13 @@
-#15/01/2025
-#@PLima
-#DASHBOARD de Rentabilidade
-
 import streamlit as st
 import pandas as pd
 import os
 import datetime
 import plotly.express as px
 import io
+import locale
 
 # Configuração da página Streamlit
-st.set_page_config(layout="wide", page_title="Dashboard de Rentabilidade")
+st.set_page_config(layout="wide", initial_sidebar_state="collapsed", page_title="Dashboard de Rentabilidade")
 
 # Função para obter o timestamp atual
 def obter_timestamp_atual():
@@ -20,6 +17,7 @@ def obter_timestamp_atual():
     
 def preparar_download_excel(df, filename="dados.xlsx"):
     """Converte um DataFrame em um arquivo Excel na memória para download."""
+    print("preparar_download_excel()")
     output = io.BytesIO()
     with pd.ExcelWriter(output, engine='xlsxwriter') as writer:
         print("Converte um DataFrame em um arquivo Excel na memória para download.")
@@ -116,11 +114,101 @@ def calcular_indicadores(df_receitas, df_custos_diretos, df_custos_fixos):
     
     return df_merged
 
+def exibir_indicadores_principais(df_indicadores_filtered):
+    """Exibe os indicadores principais."""
+    print('exibir_indicadores_principais()')
+    # Colunas para exibir indicadores:
+    col1,col2,col3,col4 = st.columns(4)
+    with col1:
+        # Exibe os dados de Receita:
+        receita_formatada = locale.format_string("R$ %.2f", df_indicadores_filtered['RECEITA'].sum(), grouping=True)
+        st.metric("Receita total:", value=f"{receita_formatada}")
+    with col2:
+        # Exibe os dados de Lucro Bruto:
+        lucro_bruto_formatado = locale.format_string("R$ %.2f", df_indicadores_filtered['LUCRO_BRUTO'].sum(), grouping=True)
+        st.metric("Lucro Bruto total:", value=f"{lucro_bruto_formatado}")
+    with col3:
+         # Exibe os dados de Margem de Lucro:
+         margem_lucro_formatada = locale.format_string("%.2f", df_indicadores_filtered['MARGEM_LUCRO'].mean(), grouping=True)
+         st.metric("Margem de Lucro total:", value=f"{margem_lucro_formatada}%")
+    with col4:
+        # Exibe os dados de Lucratividade:
+        lucratividade_formatada = locale.format_string("%.2f", df_indicadores_filtered['LUCRATIVIDADE'].mean(), grouping=True)
+        st.metric("Lucratividade total:", value=f"{lucratividade_formatada}%")
+        
+def exibir_graficos(df_indicadores_filtered):
+    """Exibe os gráficos do painel."""
+    print('exibir_graficos()')
+    st.write("---")  # Linha separadora
+
+    col1,col2,col3 = st.columns(3)
+    with col1:
+       #Gerando o grafico de linha de receita
+       print('Gerando o grafico de linha de receita')
+       fig_receita = px.line(df_indicadores_filtered, x="MES", y="RECEITA", title="Receita por Mês",
+                            labels={'MES': 'Mês', 'RECEITA': 'Receita'}, # Melhora os rótulos dos eixos
+                            )
+       fig_receita.update_traces(
+          hovertemplate="<b>Mês:</b> %{x}<br><b>Receita:</b> R$ %{y:.2f}" # Melhorando o hover
+          )
+       fig_receita.update_layout(showlegend=True) # adiciona legenda para o gráfico
+       st.plotly_chart(fig_receita, use_container_width=True)
+    with col2:
+       #Gerando o grafico de linha de lucro
+       print('Gerando o grafico de linha de lucro')
+       fig_lucro = px.line(df_indicadores_filtered, x="MES", y="LUCRO_LIQUIDO", title="Lucro Líquido por Mês",
+                            labels={'MES': 'Mês', 'LUCRO_LIQUIDO': 'Lucro Líquido'}, # Melhora os rótulos dos eixos
+                            color_discrete_sequence=['darkgreen'] # Define a cor da linha para verde escuro
+                            )
+       fig_lucro.update_traces(
+           hovertemplate="<b>Mês:</b> %{x}<br><b>Lucro Líquido:</b> R$ %{y:.2f}" # Melhorando o hover
+           )
+       fig_lucro.update_layout(showlegend=True) # adiciona legenda para o gráfico
+       st.plotly_chart(fig_lucro, use_container_width=True)
+    with col3:
+       #Gerando o grafico de barras da lucratividade:
+       print('Gerando o grafico de barras da lucratividade')
+       fig_lucratividade = px.bar(df_indicadores_filtered, x="MES", y="LUCRATIVIDADE", title="Lucratividade por Mês",
+                               text_auto=True,
+                               labels={'MES': 'Mês', 'LUCRATIVIDADE': 'Lucratividade'}, # Melhora os rótulos dos eixos
+                               color_discrete_sequence=['green'] # Define a cor da barra para verde
+                               )
+       fig_lucratividade.update_traces(
+           marker_color='lightseagreen',
+           hovertemplate="<b>Mês:</b> %{x}<br><b>Lucratividade:</b> %{y:.2f}%" # Melhorando o hover
+       )
+       st.plotly_chart(fig_lucratividade, use_container_width=True)
+       st.write("---")  # Linha separadora
+    
+     
+    
+def exibir_dataframe_geral(df_indicadores_filtered):
+    """Exibe o dataframe geral e o botão de download."""
+    print('exibir_dataframe_geral()')
+    st.write("---")  # Linha separadora
+    
+    #Dataframe Geral
+    st.subheader("Dataframe Geral:")
+    st.dataframe(df_indicadores_filtered,hide_index=True, use_container_width=True)
+    
+    # Disponibilizar o botão de download
+    print('Disponibilizar o botão de download')
+    download_xlsx = preparar_download_excel(df_indicadores_filtered)
+    st.download_button(
+       label="Download em XLSX",
+       data=download_xlsx,
+       file_name='dados_rentabilidade.xlsx',
+       mime="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
+   )
+
 # 4. Exibir os Resultados
 def main():
     st.title("Painel de Rentabilidade (Dados Fictícios)")
-    print("Painel de Rentabilidade (Dados Fictícios)")
+    print("main()")
     
+    # Define o locale para português do Brasil
+    locale.setlocale(locale.LC_ALL, 'pt_BR.UTF-8')
+
     # Verifica se o arquivo existe
     print('Verifica se o arquivo existe')
     if not os.path.exists('dados_ficticios_rentabilidade.xlsx'):
@@ -164,53 +252,13 @@ def main():
     else:
         df_indicadores_filtered = df_indicadores.copy()
     
-    # Exibe os resultados
-    st.header("Indicadores de Rentabilidade")
-    print('Exibe os resultados')
+    print('exibir_indicadores_principais(df_indicadores_filtered)')
+    print('exibir_graficos(df_indicadores_filtered)')
+    print('exibir_dataframe_geral(df_indicadores_filtered)')
     
-    # Colunas para exibir indicadores:
-    col1,col2,col3,col4 = st.columns(4)
-    with col1:
-        # Exibe os dados de Receita:
-        st.metric("Receita", value=f"R$ {df_indicadores_filtered['RECEITA'].sum():.2f}")
-    with col2:
-        # Exibe os dados de Lucro Bruto:
-        st.metric("Lucro Bruto", value=f"R$ {df_indicadores_filtered['LUCRO_BRUTO'].sum():.2f}")
-    with col3:
-         # Exibe os dados de Margem de Lucro:
-         st.metric("Margem de Lucro", value=f"{df_indicadores_filtered['MARGEM_LUCRO'].mean():.2f}%")
-    with col4:
-        # Exibe os dados de Lucratividade:
-        st.metric("Lucratividade", value=f"{df_indicadores_filtered['LUCRATIVIDADE'].mean():.2f}%")
-        
-    
-    #Gerando o grafico de linha de receita
-    print('Gerando o grafico de linha de receita')
-    fig_receita = px.line(df_indicadores_filtered, x="MES", y="RECEITA", title="Receita por Mês")
-    st.plotly_chart(fig_receita, use_container_width=True)
-    
-    #Gerando o grafico de linha de lucro
-    print('Gerando o grafico de linha de lucro')
-    fig_lucro = px.line(df_indicadores_filtered, x="MES", y="LUCRO_LIQUIDO", title="Lucro Líquido por Mês")
-    st.plotly_chart(fig_lucro, use_container_width=True)
-    
-    #Gerando o grafico de barras da lucratividade:
-    print('Gerando o grafico de barras da lucratividade')
-    fig_lucratividade = px.bar(df_indicadores_filtered, x="MES", y="LUCRATIVIDADE", title="Lucratividade por Mês", text_auto=True)
-    st.plotly_chart(fig_lucratividade, use_container_width=True)
-    
-    st.subheader("Dataframe Geral:")
-    st.dataframe(df_indicadores_filtered,hide_index=True, use_container_width=True)
-    
-    # Disponibilizar o botão de download
-    print('Disponibilizar o botão de download')
-    download_xlsx = preparar_download_excel(df_indicadores_filtered)
-    st.download_button(
-       label="Download em XLSX",
-       data=download_xlsx,
-       file_name='dados_rentabilidade.xlsx',
-       mime="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
-   )
+    exibir_indicadores_principais(df_indicadores_filtered)
+    exibir_graficos(df_indicadores_filtered)
+    exibir_dataframe_geral(df_indicadores_filtered)
     
 
 if __name__ == "__main__":
