@@ -5,6 +5,7 @@ import datetime
 import plotly.express as px
 import io
 import locale
+import random
 
 # Configuração da página Streamlit
 st.set_page_config(layout="wide", initial_sidebar_state="collapsed", page_title="Dashboard de Rentabilidade")
@@ -55,6 +56,28 @@ def criar_dados_ficticios():
     custos_fixos = [10000 + (i * 500) for i in range(len(datas))]
     df_custos_fixos = pd.DataFrame({'ANO': anos, 'MES': meses, 'CUSTO_FIXO': custos_fixos})
     print(f'df_custos_fixos: {df_custos_fixos.shape}')
+    
+    # Lista de convênios
+    convenios = ['Unimed', 'Bradesco Saúde', 'Amil', 'SulAmérica', 'Particular']
+
+    # Lista de especialidades
+    especialidades = ['Cardiologia', 'Dermatologia', 'Ginecologia', 'Oftalmologia', 'Pediatria']
+
+    # Lista de médicos
+    medicos = ['Dr. Silva', 'Dra. Santos', 'Dr. Oliveira', 'Dra. Pereira', 'Dr. Souza']
+
+    # Adiciona colunas fictícias de convênio, especialidade e médico
+    df_receitas['CONVENIO'] = [random.choice(convenios) for _ in range(len(datas))]
+    df_receitas['ESPECIALIDADE'] = [random.choice(especialidades) for _ in range(len(datas))]
+    df_receitas['MEDICO'] = [random.choice(medicos) for _ in range(len(datas))]
+    
+    df_custos_diretos['CONVENIO'] = [random.choice(convenios) for _ in range(len(datas))]
+    df_custos_diretos['ESPECIALIDADE'] = [random.choice(especialidades) for _ in range(len(datas))]
+    df_custos_diretos['MEDICO'] = [random.choice(medicos) for _ in range(len(datas))]
+    
+    df_custos_fixos['CONVENIO'] = [random.choice(convenios) for _ in range(len(datas))]
+    df_custos_fixos['ESPECIALIDADE'] = [random.choice(especialidades) for _ in range(len(datas))]
+    df_custos_fixos['MEDICO'] = [random.choice(medicos) for _ in range(len(datas))]
     
     # Concatena os dataframes em um dicionário
     dict_dataframes_ficticios = {
@@ -114,6 +137,34 @@ def calcular_indicadores(df_receitas, df_custos_diretos, df_custos_fixos):
     
     return df_merged
 
+def calcular_taxa_ocupacao(df_merged):
+    """Calcula a taxa de ocupação (fictícia)."""
+    print('calcular_taxa_ocupacao()')
+    # Cálculo fictício: número de atendimentos * 100 / número máximo de atendimentos
+    # Para este exemplo, vamos assumir um número máximo de atendimentos
+    num_atendimentos = len(df_merged)
+    num_maximo_atendimentos = 1000  # Defina um valor máximo fictício
+    taxa_ocupacao = (num_atendimentos / num_maximo_atendimentos) * 100 if num_maximo_atendimentos > 0 else 0
+    return taxa_ocupacao
+    
+def calcular_tempo_medio_permanencia(df_merged):
+    """Calcula o tempo médio de permanência (fictício)."""
+    print('calcular_tempo_medio_permanencia()')
+    # Cálculo fictício: Tempo total / Número de atendimentos
+    # Para este exemplo, vamos assumir um tempo total fictício
+    tempo_total = random.randint(1000, 5000) # Fictício
+    num_atendimentos = len(df_merged)
+    tempo_medio_permanencia = tempo_total / num_atendimentos if num_atendimentos > 0 else 0
+    return tempo_medio_permanencia
+
+def calcular_ticket_medio(df_merged):
+    """Calcula o ticket médio."""
+    print('calcular_ticket_medio()')
+    # Cálculo do ticket médio: Receita Total / Número de Atendimentos
+    num_atendimentos = len(df_merged)
+    ticket_medio = df_merged['RECEITA'].sum() / num_atendimentos if num_atendimentos > 0 else 0
+    return ticket_medio
+
 def exibir_indicadores_principais(df_indicadores_filtered):
     """Exibe os indicadores principais."""
     print('exibir_indicadores_principais()')
@@ -136,6 +187,63 @@ def exibir_indicadores_principais(df_indicadores_filtered):
         lucratividade_formatada = locale.format_string("%.2f", df_indicadores_filtered['LUCRATIVIDADE'].mean(), grouping=True)
         st.metric("Lucratividade total:", value=f"{lucratividade_formatada}%")
         
+    st.write("---")  # Linha separadora
+    
+    col8, col9, col10 = st.columns(3)
+    
+    with col8:
+        # Exibe o ticket médio
+        ticket_medio = calcular_ticket_medio(df_indicadores_filtered)
+        ticket_medio_formatado = locale.format_string("R$ %.2f", ticket_medio, grouping=True)
+        st.metric("Ticket Médio:", value=f"{ticket_medio_formatado}")
+    with col9:
+        # Exibe a taxa de ocupação
+        taxa_ocupacao = calcular_taxa_ocupacao(df_indicadores_filtered)
+        taxa_ocupacao_formatada = locale.format_string("%.2f", taxa_ocupacao, grouping=True)
+        st.metric("Taxa de Ocupação:", value=f"{taxa_ocupacao_formatada}%")
+    with col10:
+       # Exibe o tempo médio de permanência
+       tempo_medio = calcular_tempo_medio_permanencia(df_indicadores_filtered)
+       tempo_medio_formatado = locale.format_string("%.2f", tempo_medio, grouping=True)
+       st.metric("Tempo Médio:", value=f"{tempo_medio_formatado}")
+       
+    st.write("---")  # Linha separadora
+    
+    col5, col6, col7 = st.columns(3)
+    
+    # Lista de convênios
+    convenios = ['Unimed', 'Bradesco Saúde', 'Amil', 'SulAmérica', 'Particular']
+
+    # Lista de especialidades
+    especialidades = ['Cardiologia', 'Dermatologia', 'Ginecologia', 'Oftalmologia', 'Pediatria']
+
+    # Lista de médicos
+    medicos = ['Dr. Silva', 'Dra. Santos', 'Dr. Oliveira', 'Dra. Pereira', 'Dr. Souza']
+    
+    with col5:
+        # Agrupa os dados por convênio e exibe o valor
+        if not df_indicadores_filtered.empty and 'CONVENIO' in df_indicadores_filtered.columns:
+            df_convenio = df_indicadores_filtered.groupby('CONVENIO')['RECEITA'].sum().nlargest(1).index[0]
+        else:
+            df_convenio = random.choice(convenios)  # Gera um convênio fictício
+        st.metric(label=f"Convênio:", value=f"{df_convenio}")
+    with col6:
+        # Agrupa os dados por especialidade e exibe o valor
+        if not df_indicadores_filtered.empty and 'ESPECIALIDADE' in df_indicadores_filtered.columns:
+            df_especialidade = df_indicadores_filtered.groupby('ESPECIALIDADE')['RECEITA'].sum().nlargest(1).index[0]
+        else:
+            df_especialidade = random.choice(especialidades)  # Gera uma especialidade fictícia
+        st.metric(label=f"Especialidade:", value=f"{df_especialidade}")
+    with col7:
+        # Agrupa os dados por médico e exibe o valor
+        if not df_indicadores_filtered.empty and 'MEDICO' in df_indicadores_filtered.columns:
+            df_medico = df_indicadores_filtered.groupby('MEDICO')['RECEITA'].sum().nlargest(1).index[0]
+        else:
+            df_medico = random.choice(medicos)  # Gera um médico fictício
+        st.metric(label=f"Médico:", value=f"{df_medico}")
+    
+       
+           
 def exibir_graficos(df_indicadores_filtered):
     """Exibe os gráficos do painel."""
     print('exibir_graficos()')
@@ -169,10 +277,10 @@ def exibir_graficos(df_indicadores_filtered):
        #Gerando o grafico de barras da lucratividade:
        print('Gerando o grafico de barras da lucratividade')
        fig_lucratividade = px.bar(df_indicadores_filtered, x="MES", y="LUCRATIVIDADE", title="Lucratividade por Mês",
-                               text_auto=True,
-                               labels={'MES': 'Mês', 'LUCRATIVIDADE': 'Lucratividade'}, # Melhora os rótulos dos eixos
-                               color_discrete_sequence=['green'] # Define a cor da barra para verde
-                               )
+                                text_auto=True,
+                                labels={'MES': 'Mês', 'LUCRATIVIDADE': 'Lucratividade'}, # Melhora os rótulos dos eixos
+                                color_discrete_sequence=['green'] # Define a cor da barra para verde
+                                )
        fig_lucratividade.update_traces(
            marker_color='lightseagreen',
            hovertemplate="<b>Mês:</b> %{x}<br><b>Lucratividade:</b> %{y:.2f}%" # Melhorando o hover
