@@ -1,0 +1,10 @@
+Ativando ambiente virtual:
+
+> CTRL + J 
+> meu_ambiente_virtual\Scripts\activate    
+
+
+
+
+Como Usar:
+Execute o aplicativo Streamlit: streamlit run dashboard_rentabilidade.py
