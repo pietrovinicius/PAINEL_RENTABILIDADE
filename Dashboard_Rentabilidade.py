@@ -241,8 +241,6 @@ def exibir_indicadores_principais(df_indicadores_filtered):
         else:
             df_medico = random.choice(medicos)  # Gera um médico fictício
         st.metric(label=f"Médico:", value=f"{df_medico}")
-    
-       
            
 def exibir_graficos(df_indicadores_filtered):
     """Exibe os gráficos do painel."""
@@ -288,15 +286,14 @@ def exibir_graficos(df_indicadores_filtered):
        st.plotly_chart(fig_lucratividade, use_container_width=True)
        st.write("---")  # Linha separadora
     
-     
-    
 def exibir_dataframe_geral(df_indicadores_filtered):
     """Exibe o dataframe geral e o botão de download."""
     print('exibir_dataframe_geral()')
+    
     st.write("---")  # Linha separadora
     
     #Dataframe Geral
-    st.subheader("Dataframe Geral:")
+    st.subheader("Informações Gerais:")
     st.dataframe(df_indicadores_filtered,hide_index=True, use_container_width=True)
     
     # Disponibilizar o botão de download
@@ -368,7 +365,6 @@ def main():
     exibir_graficos(df_indicadores_filtered)
     exibir_dataframe_geral(df_indicadores_filtered)
     
-
 if __name__ == "__main__":
     print('\n\n\__name__ == "__main__"\n')
     main()
