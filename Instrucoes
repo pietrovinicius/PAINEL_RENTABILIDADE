@@ -4,6 +4,8 @@ Ativando ambiente virtual:
 > meu_ambiente_virtual\Scripts\activate    
 
 
+Criando requerimentos:
+pip freeze > requirements.txt
 
 
 Como Usar:
