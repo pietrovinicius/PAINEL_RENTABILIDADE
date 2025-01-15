@@ -1,3 +1,9 @@
+# 03/01/2025
+# @PLima
+# HFS - PAINEL DE DIVERSOS DADOS E INDICADORES
+# Indicadores de Ordem de Servico
+# RELATORIO 1507 - HSF - Indicadores Ordem de Servico
+
 import streamlit as st
 import pandas as pd
 import os
@@ -179,9 +185,9 @@ def exibir_indicadores_principais(df_indicadores_filtered):
         lucro_bruto_formatado = locale.format_string("R$ %.2f", df_indicadores_filtered['LUCRO_BRUTO'].sum(), grouping=True)
         st.metric("Lucro Bruto total:", value=f"{lucro_bruto_formatado}")
     with col3:
-         # Exibe os dados de Margem de Lucro:
-         margem_lucro_formatada = locale.format_string("%.2f", df_indicadores_filtered['MARGEM_LUCRO'].mean(), grouping=True)
-         st.metric("Margem de Lucro total:", value=f"{margem_lucro_formatada}%")
+        # Exibe os dados de Margem de Lucro:
+        margem_lucro_formatada = locale.format_string("%.2f", df_indicadores_filtered['MARGEM_LUCRO'].mean(), grouping=True)
+        st.metric("Margem de Lucro total:", value=f"{margem_lucro_formatada}%")
     with col4:
         # Exibe os dados de Lucratividade:
         lucratividade_formatada = locale.format_string("%.2f", df_indicadores_filtered['LUCRATIVIDADE'].mean(), grouping=True)
@@ -189,27 +195,8 @@ def exibir_indicadores_principais(df_indicadores_filtered):
         
     st.write("---")  # Linha separadora
     
-    col8, col9, col10 = st.columns(3)
-    
-    with col8:
-        # Exibe o ticket médio
-        ticket_medio = calcular_ticket_medio(df_indicadores_filtered)
-        ticket_medio_formatado = locale.format_string("R$ %.2f", ticket_medio, grouping=True)
-        st.metric("Ticket Médio:", value=f"{ticket_medio_formatado}")
-    with col9:
-        # Exibe a taxa de ocupação
-        taxa_ocupacao = calcular_taxa_ocupacao(df_indicadores_filtered)
-        taxa_ocupacao_formatada = locale.format_string("%.2f", taxa_ocupacao, grouping=True)
-        st.metric("Taxa de Ocupação:", value=f"{taxa_ocupacao_formatada}%")
-    with col10:
-       # Exibe o tempo médio de permanência
-       tempo_medio = calcular_tempo_medio_permanencia(df_indicadores_filtered)
-       tempo_medio_formatado = locale.format_string("%.2f", tempo_medio, grouping=True)
-       st.metric("Tempo Médio:", value=f"{tempo_medio_formatado}")
-       
-    st.write("---")  # Linha separadora
-    
-    col5, col6, col7 = st.columns(3)
+    #Indicadores por convênio, especialidade, médico, ticket médio, taxa de ocupação e tempo médio de permanência.
+    col5, col6, col7, col8, col9, col10 = st.columns(6)
     
     # Lista de convênios
     convenios = ['Unimed', 'Bradesco Saúde', 'Amil', 'SulAmérica', 'Particular']
@@ -241,7 +228,22 @@ def exibir_indicadores_principais(df_indicadores_filtered):
         else:
             df_medico = random.choice(medicos)  # Gera um médico fictício
         st.metric(label=f"Médico:", value=f"{df_medico}")
-           
+    with col8:
+        # Exibe o ticket médio
+        ticket_medio = calcular_ticket_medio(df_indicadores_filtered)
+        ticket_medio_formatado = locale.format_string("R$ %.2f", ticket_medio, grouping=True)
+        st.metric("Ticket Médio:", value=f"{ticket_medio_formatado}")
+    with col9:
+        # Exibe a taxa de ocupação
+        taxa_ocupacao = calcular_taxa_ocupacao(df_indicadores_filtered)
+        taxa_ocupacao_formatada = locale.format_string("%.2f", taxa_ocupacao, grouping=True)
+        st.metric("Taxa de Ocupação:", value=f"{taxa_ocupacao_formatada}%")
+    with col10:
+       # Exibe o tempo médio de permanência
+       tempo_medio = calcular_tempo_medio_permanencia(df_indicadores_filtered)
+       tempo_medio_formatado = locale.format_string("%.2f", tempo_medio, grouping=True)
+       st.metric("Tempo Médio:", value=f"{tempo_medio_formatado}")
+       
 def exibir_graficos(df_indicadores_filtered):
     """Exibe os gráficos do painel."""
     print('exibir_graficos()')
@@ -289,11 +291,10 @@ def exibir_graficos(df_indicadores_filtered):
 def exibir_dataframe_geral(df_indicadores_filtered):
     """Exibe o dataframe geral e o botão de download."""
     print('exibir_dataframe_geral()')
-    
     st.write("---")  # Linha separadora
     
     #Dataframe Geral
-    st.subheader("Informações Gerais:")
+    st.subheader("Dataframe Geral:")
     st.dataframe(df_indicadores_filtered,hide_index=True, use_container_width=True)
     
     # Disponibilizar o botão de download
@@ -313,7 +314,10 @@ def main():
     
     # Define o locale para português do Brasil
     #locale.setlocale(locale.LC_ALL, 'pt_BR.UTF-8')
-    locale.setlocale(locale.LC_ALL, 'en_US.UTF-8')
+    try:
+         locale.setlocale(locale.LC_ALL, 'en_US.UTF-8')
+    except locale.Error:
+        print("Erro ao definir o locale en_US.UTF-8. Usando locale padrão do sistema.")
 
     # Verifica se o arquivo existe
     print('Verifica se o arquivo existe')
